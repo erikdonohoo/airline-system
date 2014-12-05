@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+	<!-- Read more about context.xml here http://tomcat.apache.org/tomcat-7.0-doc/config/context.html -->
+	<!-- Read more about jndi here: http://tomcat.apache.org/tomcat-7.0-doc/jndi-resources-howto.html -->
+
+	<!-- Context Parameters -->
+	<!-- Get these in java via String paramVal = getServletContext().getInitParameter("paramKey");-->
+	<Parameter
+		name="groupId"
+		description="Maven Group ID"
+		value="${pom.groupId}"
+		override="false"/>
+	<Parameter
+		name="artifactId"
+		description="Maven Artifact ID"
+		value="${pom.artifactId}"
+		override="false"/>
+	<Parameter
+		name="name"
+		description="Maven Pom Name"
+		value="${pom.name}"
+		override="false"/>
+	<Parameter
+		name="version"
+		description="Maven Pom Version"
+		value="${pom.version}"
+		override="false"/>
+
+	<Environment
+		name="tokenInfoEndpoint"
+		description="This is the endpoint that is used to validate tokens"
+		override="false"
+		type="java.lang.String"
+		value="https://auth.mtc.byu.edu/oauth2/tokeninfo"/>
+
+	<Resource
+		name="jdbc/app"
+		auth="Container"
+		driverClassName="oracle.jdbc.OracleDriver"
+		initialSize="0"
+		maxActive="15"
+		maxIdle="3"
+		minIdle="0"
+		maxWait="-1"
+		validationQuery="SELECT 1 FROM DUAL"
+		testOnBorrow="true"
+		testWhileIdle="true"
+		removeAbandoned="true"
+		removeAbandonedTimeout="60"
+		type="javax.sql.DataSource"
+		url="jdbc:oracle:thin:@localhost:1521/orcl"
+		username="airline"
+		password="airline"/>
+
+</Context>

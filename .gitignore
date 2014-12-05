@@ -1,0 +1,16 @@
+backend/.settings/
+backend/target/
+.project
+.classpath
+backend/.idea/
+*.iml
+node_modules/
+npm-debug.log
+node_modules
+dist
+.tmp
+.sass-cache
+app/bower_components
+.DS_Store
+npm-debug.log
+app/styles/main.css
