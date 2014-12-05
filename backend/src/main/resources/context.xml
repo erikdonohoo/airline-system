@@ -26,13 +26,6 @@
 		value="${pom.version}"
 		override="false"/>
 
-	<Environment
-		name="tokenInfoEndpoint"
-		description="This is the endpoint that is used to validate tokens"
-		override="false"
-		type="java.lang.String"
-		value="https://auth.mtc.byu.edu/oauth2/tokeninfo"/>
-
 	<Resource
 		name="jdbc/app"
 		auth="Container"
