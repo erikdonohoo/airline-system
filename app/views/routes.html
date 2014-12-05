@@ -1,0 +1,53 @@
+<div class="routes">
+	<form name="fareForm" ng-submit="findFare(fareForm)" no-validate>
+		<div>
+			<label for="depCity">Departure</label>
+			<select id="depCity" ng-required ng-options="city for city in cities" ng-model="fareForm.depCity">
+				<option value="">-- Pick City --</option>
+			</select>
+		</div>
+		<div>
+			<label for="destCity">Destination</label>
+			<select id="destCity" ng-required ng-options="city for city in cities | departure:fareForm.depCity" ng-model="fareForm.destCity">
+				<option value="">-- Pick City --</option>
+			</select>
+		</div>
+		<div class="options well">
+			<h4>Options</h4>
+			<div ng-init="fareForm.value = 1">
+				<input id="distance" type="radio" value="1" ng-model="fareForm.value" />
+				<label for="distance">Shortest Distance</label>
+			</div>
+			<div>
+				<input id="layover" type="radio" value="2" ng-model="fareForm.value" />
+				<label for="layover">Minimum Layovers</label>
+			</div>
+			<div>
+				<input id="time" type="radio" value="4" ng-model="fareForm.value" />
+				<label for="time">Shortest Time With Layovers</label>
+			</div>
+			<div>
+				<input id="timeLay" type="radio" value="3" ng-model="fareForm.value" />
+				<label for="timeLay">Shortest Time Without Layovers</label>
+			</div>
+		</div>
+		<input class="btn btn-primary" type="submit" />
+	</form>
+	<div class="cheapest">
+		<div ng-show="bestMatch.length">
+			<h3>Best Match</h3>
+			<hr>
+			<h4>Distance: {{bestMatch.distance}} miles</h4>
+			<h4>Total Layovers: {{bestMatch.length - 1}}</h4>
+			<h4>Total Flight Time: {{bestMatch.timeWOLayover}} hrs</h4>
+			<h4>Total Time Including Layover: {{bestMatch.timeWLayover}} hrs</h4>
+			<h4>Flights</h4>
+			<div ng-repeat="flight in bestMatch">
+				<span>Id: {{flight.id}}</span> | <span>Departure: {{flight.depCity}} @ {{flight.depTime}}</span> | <span>Arrival: {{flight.destCity}} @ {{flight.arrTime}}</span>
+			</div>
+		</div>
+		<div ng-show="bestMatch === null">
+			<h2>No routes found</h2>
+		</div>
+	</div>
+</div>

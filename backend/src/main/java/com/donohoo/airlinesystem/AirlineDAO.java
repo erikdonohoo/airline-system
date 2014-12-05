@@ -16,13 +16,45 @@ import javax.sql.DataSource;
 public class AirlineDAO {
 	protected DataSource dataSource;
 	
+	private static final String SQL_FLIGHTS =
+		" SELECT f.*, ac.capacity, fd.mileage, fc.airfare from airline.flight f\n" +
+		" JOIN airline.aircraft a ON f.faa# = a.faa#\n" +
+		" JOIN airline.aircraft_capacity ac ON ac.type = a.type\n" +
+		" JOIN airline.flight_dist fd ON (fd.dest_city = f.dest_city AND fd.dep_city = f.dep_city)\n" +
+		" JOIN airline.flight_cost fc ON fd.mileage = fc.mileage";
+	
 	public AirlineDAO() {
 		try {
 			Context initContext = new InitialContext();
 			Context envContext = (Context)initContext.lookup("java:/comp/env");
 			dataSource = (DataSource)envContext.lookup("jdbc/app");
 		} catch (NamingException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public List<Flight> getFlights() {
+		try (Connection con = dataSource.getConnection(); PreparedStatement ps = con.prepareStatement(SQL_FLIGHTS)) {
+			ResultSet rs = ps.executeQuery();
+			List<Flight> flights = new ArrayList<>();
+			while (rs.next()) {
+				Flight f = new Flight();
+				f.setId(rs.getInt("FLIGHT#"));
+				f.setAirfare(rs.getInt("AIRFARE"));
+				f.setArrTime(rs.getInt("ARR_TIME"));
+				f.setDepTime(rs.getInt("DEP_TIME"));
+				f.setCopilotId(rs.getInt("COPILOT_ID"));
+				f.setDepCity(rs.getString("DEP_CITY").trim());
+				f.setDestCity(rs.getString("DEST_CITY").trim());
+				f.setFaaId(rs.getInt("FAA#"));
+				f.setMileage(rs.getInt("MILEAGE"));
+				f.setPilotId(rs.getInt("PILOT_ID"));
+				f.setTotalPass(rs.getInt("TOTAL_PASS"));
+				flights.add(f);
+			}
+			return flights;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	

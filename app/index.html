@@ -25,11 +25,21 @@
 		<![endif]-->
 
 		<!-- Add your site or application content here -->
-		<div class="container" ng-view></div>
+		<nav class="navbar navbar-default" ng-controller="NavCtrl">
+			<div class="container">
+				<div class="navbar-header">
+					<a class="navbar-brand" ng-href="#/">Airline System</a>
+				</div>
+				<div class="navbar-header">
+					<ul class="nav navbar-nav">
+						<li ng-class="{active: $location.path() === '/fares'}"><a ng-href="#/fares">Cheapest Flight</a></li>
+						<li ng-class="{active: $location.path() === '/routes'}"><a ng-href="#/routes">Shortest Route</a></li>
+					</ul>
+				</div>
+			<div>
+		</nav>
 
-		<footer>
-			<span class="version">{{appName}} v{{version}}</span><div class="angular"><div/>
-		</footer>
+		<div class="container" ng-view></div>
 
 		<!--[if lt IE 9]>
 		<script src="bower_components/es5-shim/es5-shim.js"></script>
@@ -39,17 +49,18 @@
 		<!-- build:js scripts/vendor.js -->
 		<!-- bower:js -->
 		<script src="bower_components/angular/angular.js"></script>
+		<script src="bower_components/json3/lib/json3.js"></script>
 		<script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
 		<script src="bower_components/angular-route/angular-route.js"></script>
-		<script src="bower_components/lodash/dist/lodash.compat.js"></script>
-		<script src="bower_components/mtc-auth/mtc.auth.js"></script>
-		<script src="bower_components/mtc-modules/mtc.modules.js"></script>
 		<!-- endbower -->
 		<!-- endbuild -->
 
 		<!-- build:js({.tmp,app}) scripts/scripts.js -->
 		<script src="scripts/app.js"></script>
 		<script src="scripts/controllers/home.js"></script>
+		<script src="scripts/controllers/fare.js"></script>
+		<script src="scripts/controllers/route.js"></script>
+		<script src="scripts/controllers/nav.js"></script>
 		<!-- endbuild -->
 </body>
 </html>

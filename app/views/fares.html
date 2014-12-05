@@ -1,0 +1,47 @@
+<div class="fares">
+	<form name="fareForm" ng-submit="findFare(fareForm)" no-validate>
+		<div>
+			<label for="depCity">Departure</label>
+			<select id="depCity" name="depCity" ng-required ng-options="city for city in cities" ng-model="fareForm.depCity">
+				<option value="">-- Pick City --</option>
+			</select>
+		</div>
+		<div>
+			<label for="destCity">Destination</label>
+			<select id="destCity" name="destCity" ng-required ng-options="city for city in cities | departure:fareForm.depCity" ng-model="fareForm.destCity">
+				<option value="">-- Pick City --</option>
+			</select>
+		</div>
+		<div class="options well">
+			<h4>Options</h4>
+			<div>
+				<label for="stops">Greatest Amount of Layovers</label>
+				<input id="stops" type="number" ng-model="fareForm.totalStops" />
+			</div>
+			<div>
+				<label for="layover">Longest Layover Time</label>
+				<input id="layover" type="number" ng-model="fareForm.layover" /> hours
+			</div>
+			<div>
+				<label for="stopCity">City To Avoid</label>
+				<select id="stopCity" name="stopCity" ng-options="city for city in cities | stop:fareForm" ng-model="fareForm.stopCity">
+					<option value="">-- Pick City --</option>
+				</select>
+			</div>
+		</div>
+		<input class="btn btn-primary" type="submit" />
+	</form>
+	<div class="cheapest">
+		<div ng-show="cheapestFare.length">
+			<h3>Total Fare: {{cheapestFare.cost}}</h3>
+			<hr>
+			<h4>Flights</h4>
+			<div ng-repeat="flight in cheapestFare">
+				<span>Id: {{flight.id}}</span> | <span>Departure: {{flight.depCity}} @ {{flight.depTime}}</span> | <span>Arrival: {{flight.destCity}} @ {{flight.arrTime}}</span>
+			</div>
+		</div>
+		<div ng-show="cheapestFare === null">
+			<h2>No routes found</h2>
+		</div>
+	</div>
+</div>

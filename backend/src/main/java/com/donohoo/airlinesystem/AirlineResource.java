@@ -29,4 +29,15 @@ public class AirlineResource {
 			return Response.serverError().build();
 		}
 	}
+	
+	@Path("flights")
+	@GET
+	public Response getFlights(@Context HttpServletRequest req) {
+		try {
+			return Response.ok(dao.getFlights()).build();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			return Response.serverError().build();
+		}
+	}
 }
