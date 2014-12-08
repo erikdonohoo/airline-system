@@ -23,6 +23,12 @@ public class AirlineDAO {
 		" JOIN airline.flight_dist fd ON (fd.dest_city = f.dest_city AND fd.dep_city = f.dep_city)\n" +
 		" JOIN airline.flight_cost fc ON fd.mileage = fc.mileage";
 	
+	private static final String SQL_PASS =
+		" SELECT * from PASSENGER";
+	
+	private static final String SQL_PASS_FLIGHT =
+		" SELECT * FROM BOOKED_FLIGHT WHERE P_ID = ?";
+	
 	public AirlineDAO() {
 		try {
 			Context initContext = new InitialContext();
@@ -53,6 +59,33 @@ public class AirlineDAO {
 				flights.add(f);
 			}
 			return flights;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public List<Passenger> getPassengers() {
+		try (Connection con = dataSource.getConnection(); PreparedStatement ps = con.prepareStatement(SQL_PASS)) {
+			ResultSet rs = ps.executeQuery();
+			List<Passenger> pass = new ArrayList<>();
+			while (rs.next()) {
+				Passenger p = new Passenger();
+				p.setId(rs.getInt("P_ID"));
+				p.setName(rs.getString("P_NAME"));
+				pass.add(p);
+			}
+			for (Passenger p : pass) {
+				List<Integer> flights = new ArrayList<>();
+				try (PreparedStatement ps2 = con.prepareStatement(SQL_PASS_FLIGHT)) {
+					ps2.setInt(1, p.getId());
+					ResultSet rs2 = ps2.executeQuery();
+					while (rs2.next()) {
+						flights.add(rs2.getInt("FLIGHT#"));
+					}
+					p.setFlights(flights);
+				}
+			}
+			return pass;
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

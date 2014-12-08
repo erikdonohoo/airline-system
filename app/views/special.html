@@ -1,0 +1,78 @@
+<div class="routes">
+	<div class="options">
+		<div class="option well">
+			<form>
+				<label for="depCity">Depart From</label>
+				<select id="depCity" name="depCity" ng-required ng-options="city for city in cities" ng-model="cityForm.depCity">
+					<option value="">-- Pick City --</option>
+				</select>
+				<label for="arrCity">Arrive At</label>
+				<select id="arrCity" name="arrCity" ng-required ng-options="city for city in cities | departure:cityForm.depCity" ng-model="cityForm.destCity">
+					<option value="">-- Pick City --</option>
+				</select>
+			</form>
+			<button class="btn btn-success" ng-click="routes = routeCopy; cityForm.depCity = ''; cityForm.destCity = ''; passengers = [];">Clear Filter</button>
+		</div>
+		<div class="option well">
+			<form name="stopMileage" ng-submit="handleMileage(stopMileage)">
+				<div>
+					<label for="stops">Max Stops (Less than or equal to three)</label>
+					<input id="stops" type="number" min="0" max="3" ng-model="stopMileage.stops" />
+				</div>
+				<div>
+					<label for="mileage">Max Total Mileage</label>
+					<input id="mileage" type="number" min="0" ng-model="stopMileage.mileage" />
+				</div>
+				<input type="submit" class="btn btn-primary" />
+			</form>
+		</div>
+	</div>
+	<div class="option well">
+		<form name="airfare" ng-submit="handleAirfare(airfare)">
+			<div>
+				<label for="airfare">Max Airfare</label>
+				<input id="airfare" type="number" min="0" max="10000" ng-model="airfare.airfare" />
+			</div>
+			<input type="submit" class="btn btn-primary" />
+		</form>
+	</div>
+	<div class="option well">
+		<form name="arrival" ng-submit="handleArrival(arrival)">
+			<div>
+				<label>Leave After</label>
+				<input type="number" ng-required min="0" max="23" ng-model="arrival.departHour" />h
+				<input type="number" ng-required min="0" max="59" ng-model="arrival.departMinute" />m
+			</div>
+			<div>
+				<label>Arrive Before</label>
+				<input type="number" ng-required min="0" max="23" ng-model="arrival.arriveHour" />h
+				<input type="number" ng-required min="0" max="59" ng-model="arrival.arriveMinute" />m
+			</div>
+			<input type="submit" class="btn btn-primary" />
+		</form>
+	</div>
+	<div class="option well">
+		<form name="pass" ng-submit="handlePass(cityForm.depCity, pass.passCity, cityForm.destCity)">
+			<label for="passCity">Passengers who pass through...</label>
+			<select id="passCity" name="passCity" ng-required ng-options="city for city in cities | stop:cityForm" ng-model="pass.passCity">
+				<option value="">-- Pick City --</option>
+			</select>
+			<input type="submit" class="btn btn-primary" />
+		</form>
+		<div ng-if="passengers.length">
+			<h3>Passengers</h3>
+			<div ng-repeat="pass in passengers">
+				{{pass.name}}
+			</div>
+		</div>
+	</div>
+</div>
+	<div ng-repeat="route in routes | fromAndTo:cityForm">
+		<h4>{{route.depCity}} -> {{route.destCity}}</h4>
+		<h4>Distance: {{route.mileage}} | Cost: {{route.airfare}}</h4>
+		<div ng-repeat="flight in route">
+			<div>#{{flight.id}} {{flight.depCity}} -> {{flight.destCity}} : Depart @ {{flight.depTime}} -> Arrive @ {{flight.arrTime}}</div>
+		</div>
+		<hr>
+	</div>
+</div>

@@ -18,6 +18,10 @@ angular.module('airlineSystemApp', [
 		templateUrl: 'views/routes.html',
 		controller: 'RouteCtrl'
 	})
+	.when('/special', {
+		templateUrl: 'views/special.html',
+		controller: 'SpecialCtrl'
+	})
 	.otherwise({
 		redirectTo: '/'
 	});

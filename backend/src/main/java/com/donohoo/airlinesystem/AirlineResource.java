@@ -40,4 +40,15 @@ public class AirlineResource {
 			return Response.serverError().build();
 		}
 	}
+	
+	@Path("passengers")
+	@GET
+	public Response getPassengers(@Context HttpServletRequest req) {
+		try {
+			return Response.ok(dao.getPassengers()).build();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			return Response.serverError().build();
+		}
+	}
 }
