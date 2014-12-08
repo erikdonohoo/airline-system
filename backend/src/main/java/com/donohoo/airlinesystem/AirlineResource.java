@@ -51,4 +51,37 @@ public class AirlineResource {
 			return Response.serverError().build();
 		}
 	}
+	
+	@Path("crew")
+	@GET
+	public Response getCrew() {
+		try {
+			return Response.ok(dao.getCrew()).build();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			return Response.serverError().build();
+		}
+	}
+	
+	@Path("planes")
+	@GET
+	public Response getPlanes() {
+		try {
+			return Response.ok(dao.getPlanes()).build();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			return Response.serverError().build();
+		}
+	}
+	
+	@Path("crew")
+	@POST
+	public Response addCrew(Crew crew) {
+		try {
+			return Response.ok(dao.addCrew(crew)).build();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			return Response.serverError().build();
+		}
+	}
 }

@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -28,6 +30,15 @@ public class AirlineDAO {
 	
 	private static final String SQL_PASS_FLIGHT =
 		" SELECT * FROM BOOKED_FLIGHT WHERE P_ID = ?";
+	
+	private static final String SQL_CREW =
+		" select c.*, \n" +
+		" CASE WHEN EXISTS (select crew_id from copilot where crew_id = c.crew_id) THEN 'COPILOT' \n" +
+		" ELSE 'PILOT' END AS position\n" +
+		" from crew c";
+	
+	private static final String SQL_ADD_CREW =
+		" INSERT INTO CREW VALUES (?,?,?,?,?,?)";
 	
 	public AirlineDAO() {
 		try {
@@ -87,6 +98,92 @@ public class AirlineDAO {
 			}
 			return pass;
 		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public List<Map<String, Object>> getPlanes() {
+		try (Connection con = dataSource.getConnection();
+			PreparedStatement ps = con.prepareStatement("SELECT a.*, ac.capacity FROM AIRCRAFT a JOIN AIRCRAFT_CAPACITY ac ON a.type = ac.type")) {
+			ResultSet rs = ps.executeQuery();
+			List<Map<String, Object>> planes = new ArrayList<>();
+			while (rs.next()) {
+				Map<String, Object> plane = new HashMap<>();
+				plane.put("id", rs.getInt("FAA#"));
+				plane.put("type", rs.getString("TYPE"));
+				plane.put("capacity", rs.getInt("CAPACITY"));
+				plane.put("yearBuilt", rs.getInt("YEAR_BUILT"));
+				planes.add(plane);
+			}
+			return planes;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public List<Crew> getCrew() {
+		try (Connection con = dataSource.getConnection(); PreparedStatement ps = con.prepareStatement(SQL_CREW)) {
+			ResultSet rs = ps.executeQuery();
+			List<Crew> crew = new ArrayList<>();
+			while (rs.next()) {
+				Crew c = new Crew();
+				c.setId(rs.getInt("CREW_ID"));
+				c.setName(rs.getString("C_NAME"));
+				c.setPosition(rs.getString("POSITION"));
+				crew.add(c);
+			}
+			return crew;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Crew addCrew(Crew crew) {
+		try (Connection con = dataSource.getConnection()) {
+			try(PreparedStatement ps = con.prepareStatement(SQL_ADD_CREW)) {
+				con.setAutoCommit(false);
+				
+				// Add to crew table
+				ps.setInt(1, crew.getId());
+				ps.setString(2, crew.getName());
+				ps.setInt(3, crew.getSalary());
+				ps.setInt(4, crew.getSeniority());
+				ps.setInt(5, crew.getSupervisor());
+				ps.setInt(6, crew.getFlyHours());
+				ps.execute();
+				
+				// Add to pilot/copilot table
+				PreparedStatement pos;
+				PreparedStatement flight;
+				if (crew.getPosition().equals("PILOT")) {
+					pos = con.prepareStatement("INSERT INTO PILOT VALUES(?)");
+					flight = con.prepareStatement("UPDATE FLIGHT SET PILOT_ID = ? WHERE FLIGHT# = ?");
+				} else {
+					pos = con.prepareStatement("INSERT INTO COPILOT VALUES(?)");
+					flight = con.prepareStatement("UPDATE FLIGHT SET COPILOT_ID = ? WHERE FLIGHT# = ?");
+				}
+				pos.setInt(1, crew.getId());
+				pos.execute();
+				
+				// Update flights
+				for (Integer flightId : crew.getFlights()) {
+					flight.setInt(1, crew.getId());
+					flight.setInt(2, flightId);
+					flight.addBatch();
+				}
+				
+				if (crew.getFlights().size() > 0) {
+					flight.executeBatch();
+				}
+				
+				con.commit();
+				
+				return crew;
+			} catch (SQLException e) {
+				con.rollback();
+				throw new RuntimeException(e);
+			}
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}

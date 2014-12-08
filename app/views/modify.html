@@ -1,0 +1,108 @@
+<div class="modify">
+	<div class="crew well">
+		<h3>Add Crew</h3>
+		<form name="crew" ng-submit="addCrew(crew)">
+			<div>
+				<label>ID</label>
+				<input type="number" ng-model="crew.id" min="0" />
+			</div>
+			<div>
+				<label>Name</label>
+				<input type="text" ng-model="crew.name" ng-maxlength="20" />
+			</div>
+			<div>
+				<label>Salary</label>
+				<input type="number" min="0" ng-model="crew.salary" />
+			</div>
+			<div>
+				<label>Seniority</label>
+				<input type="number" min="0" ng-model="crew.seniority" />
+			</div>
+			<div>
+				<label>Supervised By</label>
+				<select name="supervisor" ng-required ng-options="crew as crew.name for crew in crewmembers" ng-model="crew.supervisor">
+					<option value="">-- Pick Supervisor --</option>
+				</select>
+			</div>
+			<div>
+				<label>Fly Hours</label>
+				<input type="number" min="0" ng-model="crew.flyHours" />
+			</div>
+			<div>
+				<label>Position</label>
+				<select ng-model="crew.position">
+					<option value="">-- Select Position</option>
+					<option value="COPILOT">Co-Pilot</option>
+					<option value="PILOT">Pilot</option>
+				</select>
+			</div>
+			<div>
+				<label>Flights to assign to</label>
+				<div ng-repeat="flight in flights">
+					<input type="checkbox" ng-model="flight.assigned" /> {{flight.id}}: {{flight.depCity}} -> {{flight.destCity}}
+				</div>
+			</div>
+			<input type="submit" class="btn btn-primary" />
+		</form>
+	</div>
+	<div class="flight well">
+		<h3>Add Flight</h3>
+		<form name="flight" ng-submit="addFlight(flight)">
+			<div>
+				<label>ID</label>
+				<input type="number" ng-required ng-model="flight.id" min="0" />
+			</div>
+			<div>
+				<label>FAA#</label>
+				<select ng-options="plane as plane.id for plane in planes" ng-required ng-model="flight.aircraft">
+					<option value="">-- Choose plane --</option>
+				</select>
+			</div>
+			<div>
+				<label for="depCity">Departure</label>
+				<select id="depCity" name="depCity" ng-required ng-options="city for city in cities" ng-model="flight.depCity">
+					<option value="">-- Pick City --</option>
+				</select>
+			</div>
+			<div>
+				<label for="destCity">Destination</label>
+				<select id="destCity" name="destCity" ng-required ng-options="city for city in cities | departure:flight.depCity" ng-model="flight.destCity">
+					<option value="">-- Pick City --</option>
+				</select>
+			</div>
+			<div>
+				<label>Leave</label>
+				<input type="number" ng-required min="0" max="2359" ng-model="flight.depTime" />
+			</div>
+			<div>
+				<label>Arrive</label>
+				<input type="number" ng-required min="0" max="2359" ng-model="flight.arrTime" />
+			</div>
+			<div>
+				<label>Airfare</label>
+				<input type="number" ng-required min="0" ng-model="flight.airfare" />
+			</div>
+			<div>
+				<label>Mileage</label>
+				<input type="number" ng-required min="0" ng-model="flight.mileage" />
+			</div>
+			<div>
+				<label>Booked Passengers</label>
+				<input type="number" ng-required min="0" max={{flight.aircraft.capacity}} ng-model="flight.passengers" />
+			</div>
+			<div>
+				<label>Pilot</label>
+				<select ng-required ng-options="crew as crew.name for crew in crewmembers" ng-model="flight.pilotId">
+					<option value="">-- Pick Pilot --</option>
+				</select>
+			</div>
+			<div>
+				<label>Co-Pilot</label>
+				<select ng-required ng-options="crew as crew.name for crew in crewmembers | filter:{id: !flight.pilotId}" ng-model="flight.copilotId">
+					<option value="">-- Pick Copilot --</option>
+				</select>
+			</div>
+			<input type="submit" class="btn btn-primary" />
+		</form>
+	</div>
+</div>

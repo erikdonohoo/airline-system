@@ -22,6 +22,10 @@ angular.module('airlineSystemApp', [
 		templateUrl: 'views/special.html',
 		controller: 'SpecialCtrl'
 	})
+	.when('/modify', {
+		templateUrl: 'views/modify.html',
+		controller: 'ModifyCtrl'
+	})
 	.otherwise({
 		redirectTo: '/'
 	});
@@ -36,7 +40,10 @@ angular.module('airlineSystemApp', [
 	});
 
 	$scope.reset = function () {
-		$http.post('http://localhost:8080/airlinesystem/v1/resetdb');
+		$scope.resetting = true;
+		$http.post('http://localhost:8080/airlinesystem/v1/resetdb').success(function () {
+			$scope.resetting = false;
+		});
 	};
 }])
 
