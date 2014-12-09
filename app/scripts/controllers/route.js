@@ -34,28 +34,28 @@ function ($scope, $http, FlightService) {
 		$scope.bestMatch = connections[0] || null;
 
 		if ($scope.bestMatch) {
-			if (form.value === 1) {
+			if (parseInt(form.value) === 1) {
 				// Shortest distance
 				angular.forEach(connections, function (route) {
 					if (route.distance < $scope.bestMatch.distance) {
 						$scope.bestMatch = route;
 					}
 				});
-			} else if (form.value === 2) {
+			} else if (parseInt(form.value) === 2) {
 				// Minimal layover
 				angular.forEach(connections, function (route) {
 					if (route.length < $scope.bestMatch.length) {
 						$scope.bestMatch = route;
 					}
 				});
-			} else if (form.value === 3) {
+			} else if (parseInt(form.value) === 3) {
 				// Shortest flight time
 				angular.forEach(connections, function (route) {
 					if (route.timeWOLayover < $scope.bestMatch.timeWOLayover) {
 						$scope.bestMatch = route;
 					}
 				});
-			} else if (form.value === 4) {
+			} else if (parseInt(form.value) === 4) {
 				// Shortest total time including layover
 				angular.forEach(connections, function (route) {
 					if (route.timeWLayover < $scope.bestMatch.timeWLayover) {

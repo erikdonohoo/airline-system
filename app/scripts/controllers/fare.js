@@ -22,38 +22,47 @@ function ($scope, $http, FlightService) {
 			});
 		});
 
+		// Handle options
+		var temp = [];
+		if (form.totalStops != null) {
+			angular.forEach(connections, function (route) {
+				if (route.length <= form.totalStops + 1) temp.push(route);
+			});
+			connections = temp;
+		}
+		temp = [];
+		if (form.layover != null) {
+			angular.forEach(connections, function (route) {
+				var layover = 0;
+				for (var i = 0, j = 1; j < route.length; i++, j++) {
+					var flight1 = route[i];
+					var flight2 = route[j];
+					layover += FlightService.timeDiff(flight2.depTime, flight1.arrTime);
+				}
+				if (layover <= form.layover) temp.push(route);
+			});
+			connections = temp;
+		}
+		temp = [];
+		if (form.stopCity && form.stopCity !== '') {
+			angular.forEach(connections, function (route) {
+				var bad = false;
+				angular.forEach(route, function (f) {
+					if (f.destCity === form.stopCity) {
+						bad = true;
+					}
+				});
+				if (!bad) temp.push(route);
+			});
+			connections = temp;
+		}
+
 		$scope.cheapestFare = null;
 		if (connections.length) {
 			$scope.cheapestFare = connections[0];
 			angular.forEach(connections, function (route) {
 				if (route.cost < $scope.cheapestFare.cost) $scope.cheapestFare = route;
 			});
-		}
-
-		// Handle options
-		if ($scope.cheapestFare.length) {
-			if (form.totalStops != null) {
-				$scope.cheapestFare = ($scope.cheapestFare.length <= form.totalStops + 1) ? $scope.cheapestFare : null;
-				if (!$scope.cheapestFare) return;
-			}
-			if (form.layover != null) {
-				for (var i = 0, j = 1; j < $scope.cheapestFare.length; i++, j++) {
-					var flight1 = $scope.cheapestFare[i];
-					var flight2 = $scope.cheapestFare[j];
-					if (FlightService.timeDiff(flight2.depTime, flight1.arrTime) > (form.layover)) {
-						$scope.cheapestFare = null;
-						return;
-					}
-				}
-			}
-			if (form.stopCity && form.stopCity !== '') {
-				angular.forEach($scope.cheapestFare, function (f) {
-					if (f.destCity === form.stopCity) {
-						$scope.cheapestFare = null;
-					}
-					if (!$scope.cheapestFare) return;
-				});
-			}
 		}
 	};
 
