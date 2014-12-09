@@ -1,0 +1,164 @@
+<div class="change container">
+	<h2>Crew</h2>
+	<div class="row">
+		<div class="col-md-1">Id</div>
+		<div class="col-md-2">Name</div>
+		<div class="col-md-1">Salary</div>
+		<div class="col-md-2">Position</div>
+		<div class="col-md-1">Seniority</div>
+		<div class="col-md-2">Fly Hours</div>
+		<div class="col-md-2">Supervisor</div>
+		<div class="col-md-1">Modify</div>
+	</div>
+	<hr>
+	<div ng-hide="modify.crew">
+		<div ng-repeat="crew in crewmembers" class="row crewmember">
+			<div class="col-md-1">{{crew.id}}</div>
+			<div class="col-md-2">{{crew.name}}</div>
+			<div class="col-md-1">{{crew.salary}}</div>
+			<div class="col-md-2">{{crew.position}}</div>
+			<div class="col-md-1">{{crew.seniority}}</div>
+			<div class="col-md-2">{{crew.flyHours}}</div>
+			<div class="col-md-2">{{crew.supervisor | crewName:crewmembers}}</div>
+			<div class="col-md-1"><button class="btn btn-warning" ng-click="startCrewModify(crew)">Modify</button></div>
+		</div>
+	</div>
+	<div ng-show="modify.crew">
+		<form ng-submit="updateCrew(modify.crew)" class="crew">
+			<div class="col-md-1">{{modify.crew.id}}</div>
+			<div class="col-md-2"><input type="text" ng-model="modify.crew.name" ng-maxlength="20" /></div>
+			<div class="col-md-1"><input type="number" ng-model="modify.crew.salary" min="0" /></div>
+			<div class="col-md-2">
+				<select ng-model="modify.crew.position">
+					<option value="PILOT">Pilot</option>
+					<option value="COPILOT">Copilot</option>
+				</select>
+			</div>
+			<div class="col-md-1"><input type="number" min="0" ng-model="modify.crew.seniority" /></div>
+			<div class="col-md-2"><input type="number" min="0" ng-model="modify.crew.flyHours" /></div>
+			<div class="col-md-2">
+				<select ng-options="sup as sup.name for sup in crewmembers" ng-model="modify.crew.sup">
+					<option value="">-- Chose Supervisor --</option>
+				</select>
+			</div>
+			<div class="col-md-1">
+				<input type="submit" class="btn btn-primary" />
+			</div>
+		</form>
+	</div>
+	<h2>Flight</h2>
+	<h3>Delete</h3>
+	<select ng-options="flight as flight.id for flight in flights" ng-model="del">
+	</select>
+	<button ng-click="deleteFlight(del)" class="btn btn-danger">Delete</button>
+	<hr>
+	<div ng-hide="modify.flight">
+		<div ng-repeat="flight in flights">
+			<div>Id: {{flight.id}}</div>
+			<div>DEPART: {{flight.depCity}} @ {{flight.depTime}}</div>
+			<div>ARRIVE: {{flight.destCity}} @ {{flight.arrTime}}</div>
+			<div>Booked Passengers: {{flight.totalPass}} Aircraft: {{flight.faaId}}</div>
+			<div>Pilot: {{flight.pilotId | crewName:crewmembers}}</div>
+			<div>Copilot: {{flight.copilotId | crewName:crewmembers}}</div>
+			<button class="btn btn-success" ng-click="setModifyFlight(flight)">Modify</button>
+			<hr>
+		</div>
+	</div>
+	<div ng-show="modify.flight">
+		<form name="flight" ng-submit="updateFlight(modify.flight)">
+			<div>
+				<label>ID</label>
+				{{modify.flight.id}}
+			</div>
+			<div>
+				<label>FAA#</label>
+				<select ng-options="plane as plane.id for plane in planes" ng-required ng-model="modify.flight.aircraft">
+					<option value="">-- Choose plane --</option>
+				</select>
+			</div>
+			<div>
+				<label for="depCity">Departure</label>
+				{{modify.flight.depCity}}
+			</div>
+			<div>
+				<label for="destCity">Destination</label>
+				{{modify.flight.destCity}}
+			</div>
+			<div>
+				<label>Leave</label>
+				<input type="number" ng-required min="0" max="2359" ng-model="modify.flight.depTime" />
+			</div>
+			<div>
+				<label>Arrive</label>
+				<input type="number" ng-required min="0" max="2359" ng-model="modify.flight.arrTime" />
+			</div>
+			<div>
+				<label>Mileage</label>
+				{{modify.flight.mileage}}
+			</div>
+			<div>
+				<label>Airfare</label>
+				{{modify.flight.airfare}}
+			</div>
+			<div>
+				<label>Booked Passengers</label>
+				<input type="number" ng-required min="0" max={{modify.flight.aircraft.capacity}} ng-model="modify.flight.totalPass" />
+			</div>
+			<div>
+				<label>Pilot</label>
+				<select ng-required ng-options="crew as crew.name for crew in pilots" ng-model="modify.flight.pilot">
+					<option value="">-- Pick Pilot --</option>
+				</select>
+			</div>
+			<div>
+				<label>Co-Pilot</label>
+				<select ng-required ng-options="crew as crew.name for crew in copilots" ng-model="modify.flight.copilot">
+					<option value="">-- Pick Copilot --</option>
+				</select>
+			</div>
+			<input type="submit" class="btn btn-primary" />
+			<button class="btn btn-default" ng-click="modify.flight = null">Cancel</button>
+		</form>
+	</div>
+	<h2>Records</h2>
+	<div ng-hide="modify.record"
+		<div ng-repeat="record in records">
+			Log#: {{record.id}} | Maintenance Date: {{record.maintDate | date}} | Next Date: {{record.nextDate | date}} | FAA#: {{record.faaId}}
+			<div><b>Jobs</b></div>
+			<span ng-repeat="job in record.jobs">
+				{{job}}
+			</span>
+			<button class="btn btn-primary" ng-click="setRecordModify(record)">Modify</button>
+			<hr>
+		</div>
+	</div>
+	<div ng-show="modify.record">
+		<form name="record" ng-submit="modifyRecord(modify.record)">
+			<div>
+				<label>LOG#</label>
+				{{modify.record.id}}
+			</div>
+			<div>
+				<label>FAA#</label>
+				<select ng-options="plane as plane.id for plane in planes" ng-required ng-model="modify.record.aircraft">
+					<option value="">-- Choose plane --</option>
+				</select>
+			</div>
+			<div>
+				<label>Date of Service</label>
+				<input type="date" ng-model="modify.record.maintDate" />
+			</div>
+			<div>
+				<label>Next Service</label>
+				<input type="date" ng-model="modify.record.nextDate" />
+			</div>
+			<div>
+				<label>Jobs to Do</label>
+				<div ng-repeat="job in jobs">
+					<input type="checkbox" ng-model="job.assigned" /> {{job.id}}
+				</div>
+			</div>
+			<input type="submit" class="btn btn-primary" />
+		</form>
+	</div>
+</div>

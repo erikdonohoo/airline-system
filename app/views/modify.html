@@ -79,28 +79,58 @@
 				<input type="number" ng-required min="0" max="2359" ng-model="flight.arrTime" />
 			</div>
 			<div>
-				<label>Airfare</label>
-				<input type="number" ng-required min="0" ng-model="flight.airfare" />
+				<label>Mileage</label>
+				<input type="number" ng-required min="0" ng-model-options="{debounce: 500}" ng-model="flight.mileage" ng-disabled="disable.mileage" />
 			</div>
 			<div>
-				<label>Mileage</label>
-				<input type="number" ng-required min="0" ng-model="flight.mileage" />
+				<label>Airfare</label>
+				<input type="number" placeholder="Choose cities and mileage first" ng-required min="0" ng-model="flight.airfare" ng-disabled="disable.airfare" />
 			</div>
 			<div>
 				<label>Booked Passengers</label>
-				<input type="number" ng-required min="0" max={{flight.aircraft.capacity}} ng-model="flight.passengers" />
+				<input type="number" ng-required min="0" max={{flight.aircraft.capacity}} ng-model="flight.totalPass" />
 			</div>
 			<div>
 				<label>Pilot</label>
-				<select ng-required ng-options="crew as crew.name for crew in crewmembers" ng-model="flight.pilotId">
+				<select ng-required ng-options="crew as crew.name for crew in pilots" ng-model="flight.pilotId">
 					<option value="">-- Pick Pilot --</option>
 				</select>
 			</div>
 			<div>
 				<label>Co-Pilot</label>
-				<select ng-required ng-options="crew as crew.name for crew in crewmembers | filter:{id: !flight.pilotId}" ng-model="flight.copilotId">
+				<select ng-required ng-options="crew as crew.name for crew in copilots" ng-model="flight.copilotId">
 					<option value="">-- Pick Copilot --</option>
 				</select>
+			</div>
+			<input type="submit" class="btn btn-primary" />
+		</form>
+	</div>
+	<div class="record well">
+		<h3>Add Record</h3>
+		<form name="record" ng-submit="addRecord(record)">
+			<div>
+				<label>LOG#</label>
+				<input type="number" ng-required ng-model="record.id" min="0" />
+			</div>
+			<div>
+				<label>FAA#</label>
+				<select ng-options="plane as plane.id for plane in planes" ng-required ng-model="record.aircraft">
+					<option value="">-- Choose plane --</option>
+				</select>
+			</div>
+			<div>
+				<label>Date of Service</label>
+				<input type="date" ng-model="record.maintDate" />
+			</div>
+			<div>
+				<label>Next Service</label>
+				<input type="date" ng-model="record.nextDate" />
+			</div>
+			<div>
+				<label>Jobs to Do</label>
+				<div ng-repeat="job in jobs">
+					<input type="checkbox" ng-model="job.assigned" /> {{job.id}}
+				</div>
 			</div>
 			<input type="submit" class="btn btn-primary" />
 		</form>

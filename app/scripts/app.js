@@ -22,9 +22,13 @@ angular.module('airlineSystemApp', [
 		templateUrl: 'views/special.html',
 		controller: 'SpecialCtrl'
 	})
-	.when('/modify', {
+	.when('/insert', {
 		templateUrl: 'views/modify.html',
 		controller: 'ModifyCtrl'
+	})
+	.when('/change', {
+		templateUrl: 'views/change.html',
+		controller: 'ChangeCtrl'
 	})
 	.otherwise({
 		redirectTo: '/'

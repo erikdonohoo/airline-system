@@ -29,7 +29,23 @@ public class Flight {
 	Integer pilotId;
 	@JsonInclude(Include.NON_NULL)
 	Integer copilotId;
+	@JsonInclude(Include.NON_NULL)
+	Boolean newRoute;
+	@JsonInclude(Include.NON_NULL)
+	Boolean newCost;
 	
+	public Boolean getNewRoute() {
+		return newRoute;
+	}
+	public void setNewRoute(Boolean newRoute) {
+		this.newRoute = newRoute;
+	}
+	public Boolean getNewCost() {
+		return newCost;
+	}
+	public void setNewCost(Boolean newCost) {
+		this.newCost = newCost;
+	}
 	public Integer getId() {
 		return id;
 	}

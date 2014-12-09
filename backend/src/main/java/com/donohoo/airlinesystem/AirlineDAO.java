@@ -40,6 +40,33 @@ public class AirlineDAO {
 	private static final String SQL_ADD_CREW =
 		" INSERT INTO CREW VALUES (?,?,?,?,?,?)";
 	
+	private static final String SQL_ADD_FLIGHT =
+		" INSERT INTO FLIGHT VALUES (?,?,?,?,?,?,?,?,?)";
+	
+	private static final String SQL_CHECK_FLIGHT_DIST =
+		" SELECT * FROM FLIGHT_DIST WHERE DEP_CITY = ? AND DEST_CITY = ?";
+	
+	private static final String SQL_CHECK_FLIGHT_COST =
+		" SELECT * FROM FLIGHT_COST WHERE MILEAGE = ?";
+	
+	private static final String SQL_UPDATE_CREW =
+		" UPDATE CREW SET C_NAME = ?, SALARY = ?, SENIORITY = ?, SUPERVISED_BY = ?, FLY_HOURS = ? WHERE CREW_ID = ?";
+	
+	private static final String SQL_UPDATE_FLIGHT =
+		" UPDATE FLIGHT SET DEP_CITY = ?, DEST_CITY = ?, ARR_TIME = ?, DEP_TIME = ?, TOTAL_PASS = ?, FAA# = ?, PILOT_ID = ?, COPILOT_ID = ? WHERE FLIGHT# = ?";
+	
+	private static final String SQL_ADD_RECORD =
+		" INSERT INTO MAINT_RECORD VALUES (?,?,?,?)";
+	
+	private static final String SQL_ADD_JOB =
+		" INSERT INTO MAINT_JOB VALUES (?,?)";
+	
+	private static final String SQL_UPDATE_RECORD =
+		" UPDATE MAINT_RECORD SET FAA# = ?, M_DATE = ?, NEXT_DATE = ? WHERE LOG# = ?";
+	
+	private static final String SQL_DELETE_JOB =
+		" DELETE FROM MAINT_JOB WHERE LOG_ID = ?";
+	
 	public AirlineDAO() {
 		try {
 			Context initContext = new InitialContext();
@@ -102,6 +129,62 @@ public class AirlineDAO {
 		}
 	}
 	
+	public String deleteFlight(String id) {
+		try (Connection con = dataSource.getConnection(); PreparedStatement ps = con.prepareStatement("DELETE FROM FLIGHT WHERE FLIGHT# = ?")) {
+			ps.setString(1, id);
+			ps.execute();
+			return "OK";
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Crew updateCrew(Crew crew) {
+		try (Connection con = dataSource.getConnection()) {
+			try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_CREW)) {
+				
+				con.setAutoCommit(false);
+				
+				// Add to table
+				ps.setString(1, crew.getName());
+				ps.setInt(2, crew.getSalary());
+				ps.setInt(3, crew.getSeniority());
+				ps.setInt(4, crew.getSupervisor());
+				ps.setInt(5, crew.getFlyHours());
+				ps.setInt(6, crew.getId());
+				ps.execute();
+				
+				// Update position
+				List<Crew> list = this.getCrew();
+				for (Crew c : list) {
+					if (c.getId().equals(crew.getId()) && !c.getPosition().equals(crew.getPosition())) {
+						// We need to change the position for this person
+						Statement s = con.createStatement();
+						s.execute("UPDATE FLIGHT SET PILOT_ID = NULL WHERE PILOT_ID =" + crew.getId());
+						s.execute("UPDATE FLIGHT SET COPILOT_ID = NULL WHERE COPILOT_ID =" + crew.getId());
+						s.execute("DELETE FROM PILOT WHERE CREW_ID =" + crew.getId());
+						s.execute("DELETE FROM COPILOT WHERE CREW_ID =" + crew.getId());
+						if (crew.getPosition().equals("PILOT")) {
+							s.execute("INSERT INTO PILOT VALUES(" + crew.getId() + ")");
+						} else {
+							s.execute("INSERT INTO COPILOT VALUES(" + crew.getId() + ")");
+						}
+					}
+				}
+				
+				con.commit();
+				
+				return crew;
+				
+			} catch (SQLException e) {
+				con.rollback();
+				throw new RuntimeException(e);
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public List<Map<String, Object>> getPlanes() {
 		try (Connection con = dataSource.getConnection();
 			PreparedStatement ps = con.prepareStatement("SELECT a.*, ac.capacity FROM AIRCRAFT a JOIN AIRCRAFT_CAPACITY ac ON a.type = ac.type")) {
@@ -130,10 +213,193 @@ public class AirlineDAO {
 				c.setId(rs.getInt("CREW_ID"));
 				c.setName(rs.getString("C_NAME"));
 				c.setPosition(rs.getString("POSITION"));
+				c.setSalary(rs.getInt("SALARY"));
+				c.setSeniority(rs.getInt("SENIORITY"));
+				c.setFlyHours(rs.getInt("FLY_HOURS"));
+				c.setSupervisor(rs.getInt("SUPERVISED_BY"));
 				crew.add(c);
 			}
 			return crew;
 		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Flight addFlight(Flight flight) {
+		try (Connection con = dataSource.getConnection()) {
+			try (PreparedStatement ps = con.prepareStatement(SQL_ADD_FLIGHT); PreparedStatement dist = con.prepareStatement(SQL_CHECK_FLIGHT_DIST);
+				PreparedStatement cost = con.prepareStatement(SQL_CHECK_FLIGHT_COST)) {
+				con.setAutoCommit(false);
+				
+				// Check to add new cost
+				if (flight.getNewCost()) {
+					PreparedStatement add = con.prepareStatement("INSERT INTO FLIGHT_COST VALUES (?,?)");
+					add.setInt(1, flight.getMileage());
+					add.setInt(2, flight.getAirfare());
+					add.execute();
+					add.close();
+				}
+				
+				// Check to add new dist
+				if (flight.getNewRoute()) {
+					PreparedStatement add = con.prepareStatement("INSERT INTO FLIGHT_DIST VALUES (?,?,?)");
+					add.setString(1, flight.getDepCity());
+					add.setString(2, flight.getDestCity());
+					add.setInt(3, flight.getMileage());
+					add.execute();
+					add.close();
+				}
+				
+				// Add flight
+				ps.setInt(1, flight.getId());
+				ps.setString(2, flight.getDepCity().trim());
+				ps.setString(3, flight.getDestCity().trim());
+				ps.setInt(4, flight.getArrTime());
+				ps.setInt(5, flight.getDepTime());
+				ps.setInt(6, flight.getTotalPass());
+				ps.setInt(7, flight.getFaaId());
+				ps.setInt(8, flight.getPilotId());
+				ps.setInt(9, flight.getCopilotId());
+				ps.execute();
+				
+				con.commit();
+				
+				return flight;
+			} catch (SQLException e) {
+				con.rollback();
+				throw new RuntimeException(e);
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Record updateRecord(Record record) {
+		try (Connection con = dataSource.getConnection()) {
+			try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_RECORD); PreparedStatement ps2 = con.prepareStatement(SQL_ADD_JOB); PreparedStatement ps3 = con.prepareStatement(SQL_DELETE_JOB)) {
+				con.setAutoCommit(false);
+				
+				// Update record
+				ps.setInt(1, record.getFaaId());
+				ps.setTimestamp(2, record.getMaintDate());
+				ps.setTimestamp(3, record.getNextDate());
+				ps.setInt(4, record.getId());
+				ps.execute();
+				
+				// Delete jobs
+				ps3.setInt(1, record.getId());
+				ps3.execute();
+				
+				// Add jobs
+				if (record.getJobs().size() > 0) {
+					for (Integer i : record.getJobs()) {
+						ps2.setInt(1, i);
+						ps2.setInt(2, record.getId());
+						ps2.addBatch();
+					}
+					ps2.executeBatch();
+				}
+				
+				con.commit();
+				
+				return record;
+			} catch (SQLException e) {
+				con.rollback();
+				throw new RuntimeException(e);
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Record addRecord(Record record) {
+		try (Connection con = dataSource.getConnection()) {
+			try (PreparedStatement ps = con.prepareStatement(SQL_ADD_RECORD); PreparedStatement ps2 = con.prepareStatement(SQL_ADD_JOB)) {
+				con.setAutoCommit(false);
+				
+				// Add record
+				ps.setInt(1, record.getId());
+				ps.setInt(2, record.getFaaId());
+				ps.setTimestamp(3, record.getMaintDate());
+				ps.setTimestamp(4, record.getNextDate());
+				ps.execute();
+				
+				// Add jobs
+				if (record.getJobs().size() > 0) {
+					for (Integer i : record.getJobs()) {
+						ps2.setInt(1, i);
+						ps2.setInt(2, record.getId());
+						ps2.addBatch();
+					}
+					ps2.executeBatch();
+				}
+				
+				con.commit();
+				
+				return record;
+			} catch (SQLException e) {
+				con.rollback();
+				throw new RuntimeException(e);
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public List<Record> getRecords() {
+		try (Connection con = dataSource.getConnection()) {
+			Statement s = con.createStatement();
+			ResultSet rs = s.executeQuery("SELECT * FROM MAINT_RECORD");
+			List<Record> list = new ArrayList<>();
+			while (rs.next()) {
+				Record r = new Record();
+				r.setId(rs.getInt("LOG#"));
+				r.setFaaId(rs.getInt("FAA#"));
+				r.setMaintDate(rs.getTimestamp("M_DATE"));
+				r.setNextDate(rs.getTimestamp("NEXT_DATE"));
+				Statement o = con.createStatement();
+				ResultSet os = o.executeQuery("SELECT JOB_ID FROM MAINT_JOB WHERE LOG_ID = " + r.getId());
+				List<Integer> jobs = new ArrayList<>();
+				r.setJobs(jobs);
+				while (os.next()) {
+					jobs.add(os.getInt("JOB_ID"));
+				}
+				o.close();
+				list.add(r);
+			}
+			s.close();
+			return list;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Flight updateFlight(Flight flight) {
+		try (Connection con = dataSource.getConnection()) {
+			try (PreparedStatement ps = con.prepareStatement(SQL_UPDATE_FLIGHT)) {
+				con.setAutoCommit(false);
+				
+				
+				// Update flight
+				ps.setString(1, flight.getDepCity().trim());
+				ps.setString(2, flight.getDestCity().trim());
+				ps.setInt(3, flight.getArrTime());
+				ps.setInt(4, flight.getDepTime());
+				ps.setInt(5, flight.getTotalPass());
+				ps.setInt(6, flight.getFaaId());
+				ps.setInt(7, flight.getPilotId());
+				ps.setInt(8, flight.getCopilotId());
+				ps.setInt(9, flight.getId());
+				ps.execute();
+				
+				con.commit();
+				
+				return flight;
+			} catch (SQLException e) {
+				con.rollback();
+				throw new RuntimeException(e);
+			}
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -307,19 +573,19 @@ public class AirlineDAO {
 			s.execute("INSERT INTO AIRLINE.AIRCRAFT (FAA#, TYPE, YEAR_BUILT) VALUES (19, 'B767', 2005)");
 			
 			// Flight
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (101, 'MONTREAL', 'NY', '0645', '0530', 111, 10, 2, 11)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (102, 'MONTREAL', 'WASHINGTON', '0235', '0100', 89, 5, 1, 30)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (103, 'NY', 'CHICAGO', '1000', '0800', 15, 9, 2, 11)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (105, 'WASHINGTON', 'KANSAS-CITY', '0845', '0600', 109, 27, 1, 30)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (106, 'WASHINGTON', 'NY', '1330', '1200', 97, 16, 3, 13)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (107, 'CHICAGO', 'SLC', '1430', '1100', 150, 82, 2, 11)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (110, 'KANSAS-CITY', 'DENVER', '1225', '1000', 78, 31, 4, 32)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (111, 'KANSAS-CITY', 'SLC', '1530', '1300', 62, 44, 1, 30)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (112, 'SLC', 'SANFRAN', '1930', '1800', 118, 79, 22, 8)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (113, 'SLC', 'LA', '1900', '1730', 138, 23, 21, 10)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (115, 'DENVER', 'SLC', '1600', '1500', 70, 58, 4, 32)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (116, 'SANFRAN', 'LA', '2230', '2200', 85, 99, 22, 8)");
-			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (118, 'LA', 'SEATTLE', '2000', '2100', 120, 19, 21, 10)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (101, 'MONTREAL', 'NY', 0645, 530, 111, 10, 2, 11)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (102, 'MONTREAL', 'WASHINGTON', 235, 100, 89, 5, 1, 30)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (103, 'NY', 'CHICAGO', 1000, 800, 15, 9, 2, 11)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (105, 'WASHINGTON', 'KANSAS-CITY', 845, 600, 109, 27, 1, 30)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (106, 'WASHINGTON', 'NY', 1330, 1200, 97, 16, 3, 13)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (107, 'CHICAGO', 'SLC', 1430, 1100, 150, 82, 2, 11)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (110, 'KANSAS-CITY', 'DENVER', 1225, 1000, 78, 31, 4, 32)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (111, 'KANSAS-CITY', 'SLC', 1530, 1300, 62, 44, 1, 30)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (112, 'SLC', 'SANFRAN', 1930, 1800, 118, 79, 22, 8)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (113, 'SLC', 'LA', 1900, 1730, 138, 23, 21, 10)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (115, 'DENVER', 'SLC', 1600, 1500, 70, 58, 4, 32)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (116, 'SANFRAN', 'LA', 2230, 2200, 85, 99, 22, 8)");
+			s.execute("INSERT INTO AIRLINE.FLIGHT VALUES (118, 'LA', 'SEATTLE', 2000, 2100, 120, 19, 21, 10)");
 			
 			// Can Fly
 			s.execute("INSERT INTO AIRLINE.CAN_FLY VALUES (1, 5)");
